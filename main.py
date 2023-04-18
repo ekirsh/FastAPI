@@ -8,7 +8,7 @@ app = FastAPI()
 
 proxy = {
     'http': 'http://kOKRLEQTDsyH9mmzKyzJlQ@smartproxy.crawlbase.com:8012',
-    'https': 'https://kOKRLEQTDsyH9mmzKyzJlQ@smartproxy.crawlbase.com:8012'
+    'https': 'http://kOKRLEQTDsyH9mmzKyzJlQ@smartproxy.crawlbase.com:8012'
 }
 
 headers = {
