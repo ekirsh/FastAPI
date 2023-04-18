@@ -17,8 +17,10 @@ headers = {
 
 def scrape_artist(artist_name):
     url = f"https://genius.com/artists/{artist_name.replace(' ', '-')}"
+    session = requests.session()
+    session.proxies.update(proxy)
 
-    response = requests.get(url, proxies=proxy, headers=headers, verify=False)
+    response = session.get(url, headers=headers, verify=False)
     soup = BeautifulSoup(response.content, 'html.parser')
     print(soup)
     song_list = soup.find_all('div', class_='mini_card-title')
