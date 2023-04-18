@@ -60,6 +60,6 @@ async def demo_post(inp: Msg):
     return {"message": inp.msg.upper()}
 
 
-@app.get("/artists/{path_id}")
+@app.get("/artists/{artist_id}")
 async def demo_get_path_id(artist_id: str):
     return scrape_artist(artist_id)
