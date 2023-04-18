@@ -7,8 +7,8 @@ from lxml import etree
 app = FastAPI()
 
 proxy = {
-    'http': 'http://kOKRLEQTDsyH9mmzKyzJlQ@smartproxy.crawlbase.com:8012',
-    'https': 'http://kOKRLEQTDsyH9mmzKyzJlQ@smartproxy.crawlbase.com:8012'
+    'http': 'http://173.212.237.43:34334',
+    'https': 'http://173.212.237.43:34334'
 }
 
 headers = {
@@ -17,10 +17,8 @@ headers = {
 
 def scrape_artist(artist_name):
     url = f"https://genius.com/artists/{artist_name.replace(' ', '-')}"
-    session = requests.session()
-    session.proxies.update(proxy)
 
-    response = session.get(url, headers=headers, verify=False)
+    response = requests.get(url, proxies=proxy, headers=headers, verify=False)
     soup = BeautifulSoup(response.content, 'html.parser')
     print(soup)
     song_list = soup.find_all('div', class_='mini_card-title')
