@@ -1,10 +1,48 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+import requests
+from bs4 import BeautifulSoup
+from lxml import etree
 
 app = FastAPI()
 
+async def scrape_artist(artist_name):
+    url = f"https://genius.com/artists/{artist_name.replace(' ', '-')}"
+
+    response = requests.get(url)
+    soup = BeautifulSoup(response.content, 'html.parser')
+    print(soup)
+    song_list = soup.find_all('div', class_='mini_card-title')
+    link_list = []
+    for a in soup.find_all('a', class_='mini_card'):
+        link_list.append(a['href'])
+
+
+    print(f"Top songs by {artist_name}:")
+    song_data = {}
+    for i, song in enumerate(song_list):
+        print(f"{i+1}. {song.text} ({link_list[i]})")
+        r = requests.get(link_list[i])
+        s = BeautifulSoup(r.content, 'html.parser')
+        credits = s.find_all('div', class_="SongInfo__Credit-nekw6x-3 fognin")
+        song_data[song.text] = {'collaborators': []}
+
+        collab = []
+        for c in credits:
+            c_type = c.find('div').text
+            if (c_type == "Written By" or c_type == "Produced By"):
+                names = c.find_all('a')
+                for n in names:
+                    if n.text not in collab:
+                        masterlist.append(n.text)
+                        collab.append(n.text)
+
+        song_data[song.text]['collaborators'] = collab
+    return song_data
+
 class Msg(BaseModel):
     msg: str
+
 
 
 @app.get("/")
@@ -22,6 +60,6 @@ async def demo_post(inp: Msg):
     return {"message": inp.msg.upper()}
 
 
-@app.get("/path/{path_id}")
-async def demo_get_path_id(path_id: int):
-    return {"message": f"This is /path/{path_id} endpoint, use post request to retrieve result"}
+@app.get("/artists/{path_id}")
+async def demo_get_path_id(artist_id: str):
+    return scrape_artist(artist_id)
