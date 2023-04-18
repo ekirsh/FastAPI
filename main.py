@@ -6,7 +6,7 @@ from lxml import etree
 
 app = FastAPI()
 
-async def scrape_artist(artist_name):
+def scrape_artist(artist_name):
     url = f"https://genius.com/artists/{artist_name.replace(' ', '-')}"
 
     response = requests.get(url)
