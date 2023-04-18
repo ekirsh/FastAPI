@@ -6,10 +6,19 @@ from lxml import etree
 
 app = FastAPI()
 
+proxy = {
+    'http': 'http://kOKRLEQTDsyH9mmzKyzJlQ@smartproxy.crawlbase.com:8012',
+    'https': 'https://kOKRLEQTDsyH9mmzKyzJlQ@smartproxy.crawlbase.com:8012'
+}
+
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
+
+
 def scrape_artist(artist_name):
     url = f"https://genius.com/artists/{artist_name.replace(' ', '-')}"
 
-    response = requests.get(url)
+    response = requests.get(url, proxies=proxy, headers=headers)
     soup = BeautifulSoup(response.content, 'html.parser')
     print(soup)
     song_list = soup.find_all('div', class_='mini_card-title')
@@ -22,7 +31,7 @@ def scrape_artist(artist_name):
     song_data = {}
     for i, song in enumerate(song_list):
         print(f"{i+1}. {song.text} ({link_list[i]})")
-        r = requests.get(link_list[i])
+        r = requests.get(link_list[i], proxies=proxy, headers=headers)
         s = BeautifulSoup(r.content, 'html.parser')
         credits = s.find_all('div', class_="SongInfo__Credit-nekw6x-3 fognin")
         song_data[song.text] = {'collaborators': []}
