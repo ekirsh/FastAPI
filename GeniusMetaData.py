@@ -56,7 +56,7 @@ def rank_collaborators(songs, artist_name):
                 score = (len(songs) - i) / len(songs)
                 collaborators[collaborator]['relevance'] = collaborators.get(collaborator, {}).get('relevance', 0) + score
                 collaborators[collaborator]['relevance_score'] = collaborators[collaborator]['relevance'] / collaborators[collaborator]['count'] 
-    sorted_collaborators = sorted(collaborators.items(), key=lambda x: (-x[1]['relevance']/x[1]['count'], -x[1]['count'], -x[1]['views'], -x[1]['hot_count']))
+    sorted_collaborators = sorted(collaborators.items(), key=lambda x: (-x[1]['relevance'], -x[1]['views'], -x[1]['count'], -x[1]['hot_count']))
 
     
     return sorted_collaborators
