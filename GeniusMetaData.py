@@ -1,0 +1,309 @@
+
+import requests, json
+from time import sleep
+from collections import defaultdict
+from functools import partial
+from typing import List, Dict
+import sys
+import re
+import firebase_admin
+from firebase_admin import credentials, firestore
+
+cred = credentials.Certificate('music-genius-383921-firebase-adminsdk-5pb85-70bdafbc7b.json')
+firebase_admin.initialize_app(cred)
+
+db = firestore.client()
+
+# constant values.
+BASE_URL = "https://api.genius.com"
+CLIENT_ACCESS_TOKEN = "uFcrDVB7L-4RswcUSzhO_yz6bldyQZ2dBbJQZCceXjrio6JJ4nBR5RVXuWA9G2c-"
+ARTIST_NAME = sys.argv[1]
+
+def format_string(string):
+    # convert string to lowercase
+    string = string.lower()
+    
+    # remove special characters from string
+    string = string.replace(' ', '').replace('-', '')
+    string = string.lstrip()
+    string = string.replace('\u200b', '')
+    string = re.sub(r'^\s*', '', string)
+    
+    return string
+    
+
+def rank_collaborators(songs, artist_name):
+    collaborators = {}
+    for i, song in enumerate(songs):
+        for collaborator in song['writer_artists'] + song['producer_artists']:
+            id_num = collaborator['id']
+            collaborator = collaborator['name']
+            print(collaborator)
+            print(artist_name)
+            if collaborator != artist_name:
+                if collaborator not in collaborators:
+                    collaborators[collaborator] = {'count': 1, 'hot_count': int(song['hot']), 'id': str(id_num), 'views': song['views'], 'song_list': [{'title': song['title'], 'id': song['id'], 'song_art': song['song_art']}]}
+                    score = (len(songs) - i) / len(songs)
+                    collaborators[collaborator]['relevance'] = collaborators.get(collaborator, {}).get('relevance', 0) + score
+                else:
+                    collaborators[collaborator]['count'] += 1
+                    collaborators[collaborator]['hot_count'] += int(song['hot'])
+                    collaborators[collaborator]['views'] += song['views']
+                    collaborators[collaborator]['avg_views'] = collaborators[collaborator]['views'] /  collaborators[collaborator]['count']
+                    new_song = {'title': song['title'], 'id': song['id'], 'song_art': song['song_art']}
+                    if new_song not in collaborators[collaborator]['song_list']:
+                        collaborators[collaborator]['song_list'].append(new_song)
+                score = (len(songs) - i) / len(songs)
+                collaborators[collaborator]['relevance'] = collaborators.get(collaborator, {}).get('relevance', 0) + score
+                collaborators[collaborator]['relevance_score'] = collaborators[collaborator]['relevance'] / collaborators[collaborator]['count'] 
+    sorted_collaborators = sorted(collaborators.items(), key=lambda x: (-x[1]['relevance']/x[1]['count'], -x[1]['count'], -x[1]['views'], -x[1]['hot_count']))
+
+    
+    return sorted_collaborators
+
+
+
+#def rank_collaborators(songs_data):
+    # Create a dictionary to store collaborators and their stats
+    #collaborators = defaultdict(lambda: {'count': 0, 'last_release': None, 'views': 0, 'hot_count': 0})
+    
+    #for song in songs_data:
+        # Update collaborators' count
+        #print(song)
+        #for collaborator in song['writer_artists'] + song['producer_artists']:
+            #collaborators[collaborator]['count'] += 1
+            #collaborators[collaborator]['views'] += song['views']
+            #if song['hot']:
+                #collaborators[collaborator]['hot_count'] += 1
+            #if collaborators[collaborator]['last_release'] is None or song['release_date'] > collaborators[collaborator]['last_release']:
+                #collaborators[collaborator]['last_release'] = song['release_date']
+    
+    # Sort collaborators based on the stats
+    #sorted_collaborators = sorted(collaborators.items(), key=lambda x: (x[1]['count'], x[1]['last_release'], x[1]['views'] / x[1]['count'], x[1]['hot_count']), reverse=True)
+    
+    #return sorted_collaborators
+
+
+# send request and get response in json format.
+def _get(path, params=None, headers=None):
+
+    # generate request URL
+    requrl = '/'.join([BASE_URL, path])
+    token = "Bearer {}".format(CLIENT_ACCESS_TOKEN)
+    if headers:
+        headers['Authorization'] = token
+    else:
+        headers = {"Authorization": token}
+    try:
+        response = requests.get(url=requrl, params=params, headers=headers)
+    except:
+        sleep(2)
+        print('e')
+        _get(path, params, headers)
+    response.raise_for_status()
+
+    return response.json()
+
+def get_artist_songs(artist_id):
+    # initialize variables & a list.
+    current_page = 1
+    next_page = True
+    songs = []
+
+    # main loop
+    while next_page:
+
+        if current_page > 2:
+            break
+
+        path = "artists/{}/songs/?sort=popularity".format(artist_id)
+        params = {'page': current_page}
+        data = _get(path=path, params=params)
+        #print(data)
+        page_songs = data['response']['songs']
+
+        if page_songs:
+            # add all the songs of current page,
+            # and increment current_page value for next loop.
+            songs += page_songs
+            current_page += 1
+        else:
+            # if page_songs is empty, quit.
+            next_page = False
+
+    # get all the song ids, excluding not-primary-artist songs.
+    songs = [song["id"] for song in songs
+             if song["primary_artist"]["id"] == artist_id]
+
+    print(songs)
+    return songs
+
+def get_collaborator_songs(artist_id):
+    # initialize variables & a list.
+    current_page = 1
+    next_page = True
+    songs = []
+
+    # main loop
+    while next_page:
+
+        path = "artists/{}/songs/?sort=popularity".format(artist_id)
+        params = {'page': current_page}
+        data = _get(path=path, params=params)
+        #print(data)
+        page_songs = data['response']['songs']
+
+        if page_songs:
+            # add all the songs of current page,
+            # and increment current_page value for next loop.
+            songs += page_songs
+            current_page += 1
+        else:
+            # if page_songs is empty, quit.
+            next_page = False
+
+    # get all the song ids, excluding not-primary-artist songs.
+    songs = [song["id"] for song in songs]
+             
+
+    print(songs)
+    return songs
+
+def get_song_information(song_ids):
+    # initialize a dictionary.
+    song_list = []
+
+    # main loop
+    for i, song_id in enumerate(song_ids):
+        print("id:" + str(song_id) + " start. ->")
+
+        path = "songs/{}".format(song_id)
+        data = _get(path=path)["response"]["song"]
+
+
+        song_list.append(
+            {
+                "title": data["title"],
+                "album": data["album"]["name"] if data["album"] else "single",
+                "release_date": data["release_date"] if data["release_date"] else "unidentified",
+                "featured_artists":
+                    [{'name': feat["name"], 'id': feat['id']}if data["featured_artists"] else "" for feat in data["featured_artists"]],
+                "producer_artists":
+                    [{'name': feat["name"], 'id': feat['id']} if data["producer_artists"] else "" for feat in data["producer_artists"]],
+                "writer_artists":
+                    [{'name': feat["name"], 'id': feat['id']} if data["writer_artists"] else "" for feat in data["writer_artists"]],
+                "genius_track_id": song_id,
+                "genius_album_id": data["album"]["id"] if data["album"] else "none",
+                "song_art": data["song_art_image_thumbnail_url"],
+                "hot": data["stats"]["hot"],
+                "views": data["stats"].get("pageviews", 0),
+                "id": str(song_id),
+                "rank": i + 1
+            }
+        )
+        
+        print("-> id:" + str(song_id) + " is finished. \n")
+    return song_list
+
+# # # 
+
+print("searching " + ARTIST_NAME + "'s artist id. \n")
+
+# find artist id from given data.
+find_id = _get("search", {'q': ARTIST_NAME})
+artist_name = ""
+for hit in find_id["response"]["hits"]:
+    original_name = hit["result"]["primary_artist"]["name"]
+    formatted_name = format_string(original_name)
+    print(formatted_name)
+    print(format_string(ARTIST_NAME))
+    if formatted_name == format_string(ARTIST_NAME):
+        artist_id = hit["result"]["primary_artist"]["id"]
+        artist_name = original_name
+        print(artist_id)
+        break
+
+print("-> " + ARTIST_NAME + "'s id is " + str(artist_id) + "\n")
+
+print("getting song ids. \n")
+
+# get all song ids and make a list.
+song_ids = get_artist_songs(artist_id)
+
+#with open("./" + ARTIST_NAME + " Genius Song IDs.text", "w") as f:
+    #write(song_ids)
+
+print(song_ids)
+print("\n-> got all the song ids. take a break for a while \n")
+
+sleep(2)
+
+print("getting meta data of each song. \n")
+
+# finally, make a full list of songs with meta data.
+full_list_of_songs = get_song_information(song_ids)
+
+print("-> Finished! Dump the data into json data. \n")
+
+#with open("./" + ARTIST_NAME + " Songs.json", "w") as f:
+    #json.dump(full_list_of_songs, g)
+
+x = rank_collaborators(full_list_of_songs, artist_name)
+#print(x)
+
+for i, (collaborator, data) in enumerate(x):
+    doc_ref = db.collection('artists').document(artist_name).collection('collaborators').document(collaborator)
+    doc_ref.set({
+        'rank': i + 1,
+        'id': data['id'],
+        'count': data['count'],
+        'hot_count': data['hot_count'],
+        'views': data['views'],
+        'song_list': data['song_list'],
+        'relevance': data['relevance'],
+        'relevance_score': data['relevance_score']
+    })
+
+y = 0
+ids = [data[1]['id'] for data in x]
+names = [data[0] for data in x]
+
+for card in x:
+    doc_ref = db.collection('artists').document(artist_name).collection('collaborators').document(card)
+    doc_ref.set({
+            'name': names[y],
+            'rank': y + 1,
+            'id': data[1]['id'],
+            'count': data[1]['count'],
+            'hot_count': data[1]['hot_count'],
+            'views': data[1]['views'],
+            'song_list': data[1]['song_list'],
+            'relevance': data[1]['relevance'],
+            'relevance_score': data[1]['relevance_score']
+        })
+    #print(ids[y])
+    songs = get_collaborator_songs(ids[y])
+    #print(songs)
+    sleep(2)
+    song_info = get_song_information(songs)
+    #print(song_info)
+    for song in song_info:
+        doc_ref = db.collection('artists').document(artist_name).collection('collaborators').document(names[y]).collection('songs')
+        doc_ref.add(song)
+    z = rank_collaborators(song_info, names[y])
+    for i, (collaborator, data) in enumerate(z):
+        print(f'{names[y]} {collaborator}')
+        doc_ref = db.collection('artists').document(artist_name).collection('collaborators').document(names[y]).collection('collaborators').document(collaborator)
+        doc_ref.set({
+            'rank': i + 1,
+            'id': data['id'],
+            'count': data['count'],
+            'hot_count': data['hot_count'],
+            'views': data['views'],
+            'song_list': data['song_list'],
+            'relevance': data['relevance'],
+            'relevance_score': data['relevance_score']
+        })
+    y += 1
+
+print("-> Mission complete! Check it out!")
