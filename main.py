@@ -6,7 +6,9 @@ from lxml import etree
 import subprocess
 import threading
 
+
 app = FastAPI()
+
 
 def run_scraper(artist):
     cmd = ['python3', 'GeniusMetaData.py', artist]

@@ -55,18 +55,25 @@ def rank_collaborators(songs, artist_name):
                     collaborators[collaborator] = {'count': 1, 'hot_count': int(song['hot']), 'id': str(id_num), 'views': song['views'], 'song_list': [{'title': song['title'], 'id': song['id'], 'song_art': song['song_art'], 'rank': song['rank']}]}
                     score = (len(songs) - i) / len(songs)
                     collaborators[collaborator]['relevance'] = collaborators.get(collaborator, {}).get('relevance', 0) + score
+                    score = (len(songs) - i) / len(songs)
+                    collaborators[collaborator]['relevance'] = collaborators.get(collaborator, {}).get('relevance', 0) + score
+                    collaborators[collaborator]['relevance_score'] = collaborators[collaborator]['relevance'] / collaborators[collaborator]['count']
                 else:
-                    collaborators[collaborator]['hot_count'] += int(song['hot'])
-                    collaborators[collaborator]['views'] += song['views']
-                    collaborators[collaborator]['avg_views'] = collaborators[collaborator]['views'] /  collaborators[collaborator]['count']
                     new_song = {'title': song['title'], 'id': song['id'], 'song_art': song['song_art'], 'rank': song['rank']}
                     if new_song not in collaborators[collaborator]['song_list']:
+                        collaborators[collaborator]['hot_count'] += int(song['hot'])
+                        collaborators[collaborator]['views'] += song['views']
+                        collaborators[collaborator]['avg_views'] = collaborators[collaborator]['views'] /  collaborators[collaborator]['count']
                         collaborators[collaborator]['song_list'].append(new_song)
                         collaborators[collaborator]['count'] += 1
-                score = (len(songs) - i) / len(songs)
-                collaborators[collaborator]['relevance'] = collaborators.get(collaborator, {}).get('relevance', 0) + score
-                collaborators[collaborator]['relevance_score'] = collaborators[collaborator]['relevance'] / collaborators[collaborator]['count'] 
-    sorted_collaborators = sorted(collaborators.items(), key=lambda x: (-x[1]['relevance_score'], -x[1]['relevance'], -x[1]['views'], -x[1]['count'], -x[1]['hot_count']))
+                        score = (len(songs) - i) / len(songs)
+                        collaborators[collaborator]['relevance'] = collaborators.get(collaborator, {}).get('relevance', 0) + score
+                        collaborators[collaborator]['relevance_score'] = collaborators[collaborator]['relevance'] / collaborators[collaborator]['count']
+    sorted_collaborators = sorted(collaborators.items(),
+                                  key=lambda x: (-x[1]['relevance_score'],
+                                                 -x[1]['count']*0.75 + -x[1]['views']*0.25,
+                                                 -x[1]['relevance'],
+                                                 -x[1]['hot_count']))
 
     
     return sorted_collaborators
