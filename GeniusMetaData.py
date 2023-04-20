@@ -19,6 +19,16 @@ BASE_URL = "https://api.genius.com"
 CLIENT_ACCESS_TOKEN = "uFcrDVB7L-4RswcUSzhO_yz6bldyQZ2dBbJQZCceXjrio6JJ4nBR5RVXuWA9G2c-"
 ARTIST_NAME = sys.argv[1]
 
+def get_artist_info(artist_id):
+    base_url = "https://api.genius.com/artists/"
+    headers = {'Authorization': 'Bearer uFcrDVB7L-4RswcUSzhO_yz6bldyQZ2dBbJQZCceXjrio6JJ4nBR5RVXuWA9G2c-'}
+    url = base_url + str(artist_id)
+    response = requests.get(url, headers=headers)
+    data = response.json()['response']['artist']
+    artist_info = {'description': data['description']['plain'], 'instagram': data['instagram_name'],
+                   'twitter': data['twitter_name'], 'image': data['image_url']}
+    return artist_info
+
 def format_string(string):
     # convert string to lowercase
     string = string.lower()
@@ -46,17 +56,17 @@ def rank_collaborators(songs, artist_name):
                     score = (len(songs) - i) / len(songs)
                     collaborators[collaborator]['relevance'] = collaborators.get(collaborator, {}).get('relevance', 0) + score
                 else:
-                    collaborators[collaborator]['count'] += 1
                     collaborators[collaborator]['hot_count'] += int(song['hot'])
                     collaborators[collaborator]['views'] += song['views']
                     collaborators[collaborator]['avg_views'] = collaborators[collaborator]['views'] /  collaborators[collaborator]['count']
                     new_song = {'title': song['title'], 'id': song['id'], 'song_art': song['song_art'], 'rank': song['rank']}
                     if new_song not in collaborators[collaborator]['song_list']:
                         collaborators[collaborator]['song_list'].append(new_song)
+                        collaborators[collaborator]['count'] += 1
                 score = (len(songs) - i) / len(songs)
                 collaborators[collaborator]['relevance'] = collaborators.get(collaborator, {}).get('relevance', 0) + score
                 collaborators[collaborator]['relevance_score'] = collaborators[collaborator]['relevance'] / collaborators[collaborator]['count'] 
-    sorted_collaborators = sorted(collaborators.items(), key=lambda x: (-x[1]['relevance'], -x[1]['views'], -x[1]['count'], -x[1]['hot_count']))
+    sorted_collaborators = sorted(collaborators.items(), key=lambda x: (-x[1]['relevance_score'], -x[1]['relevance'], -x[1]['views'], -x[1]['count'], -x[1]['hot_count']))
 
     
     return sorted_collaborators
@@ -186,8 +196,9 @@ def get_song_information(song_ids):
                 "title": data["title"],
                 "album": data["album"]["name"] if data["album"] else "single",
                 "release_date": data["release_date"] if data["release_date"] else "unidentified",
+                "primary_artist": data["primary_artist"],
                 "featured_artists":
-                    [{'name': feat["name"], 'id': feat['id']}if data["featured_artists"] else "" for feat in data["featured_artists"]],
+                    [{'name': feat["name"], 'id': feat['id']} if data["featured_artists"] else "" for feat in data["featured_artists"]],
                 "producer_artists":
                     [{'name': feat["name"], 'id': feat['id']} if data["producer_artists"] else "" for feat in data["producer_artists"]],
                 "writer_artists":
@@ -251,26 +262,15 @@ print("-> Finished! Dump the data into json data. \n")
 x = rank_collaborators(full_list_of_songs, artist_name)
 #print(x)
 
-for i, (collaborator, data) in enumerate(x):
-    doc_ref = db.collection('artists').document(artist_name).collection('collaborators').document(collaborator)
-    doc_ref.set({
-        'rank': i + 1,
-        'id': data['id'],
-        'count': data['count'],
-        'hot_count': data['hot_count'],
-        'views': data['views'],
-        'song_list': data['song_list'],
-        'relevance': data['relevance'],
-        'relevance_score': data['relevance_score']
-    })
-
 y = 0
 ids = [data[1]['id'] for data in x]
 names = [data[0] for data in x]
 
 for card in x:
+    info_a = get_artist_info(card[1]['id'])
     doc_ref = db.collection('artists').document(artist_name).collection('collaborators').document(card[0])
     doc_ref.set({
+            'info': info_a,
             'name': names[y],
             'rank': y + 1,
             'id': card[1]['id'],
