@@ -22,7 +22,7 @@ ARTIST_NAME = sys.argv[1]
 def get_artist_info(artist_id):
     base_url = "https://api.genius.com/artists/"
     headers = {'Authorization': 'Bearer uFcrDVB7L-4RswcUSzhO_yz6bldyQZ2dBbJQZCceXjrio6JJ4nBR5RVXuWA9G2c-'}
-    url = base_url + str(artist_id)
+    url = base_url + str(artist_id) + "?text_format=plain"
     response = requests.get(url, headers=headers)
     data = response.json()['response']['artist']
     artist_info = {'description': data['description']['plain'], 'instagram': data['instagram_name'],
