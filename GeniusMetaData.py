@@ -42,7 +42,7 @@ def rank_collaborators(songs, artist_name):
             print(artist_name)
             if collaborator != artist_name:
                 if collaborator not in collaborators:
-                    collaborators[collaborator] = {'count': 1, 'hot_count': int(song['hot']), 'id': str(id_num), 'views': song['views'], 'song_list': [{'title': song['title'], 'id': song['id'], 'song_art': song['song_art']}]}
+                    collaborators[collaborator] = {'count': 1, 'hot_count': int(song['hot']), 'id': str(id_num), 'views': song['views'], 'song_list': [{'title': song['title'], 'id': song['id'], 'song_art': song['song_art'], 'rank': song['rank']}]}
                     score = (len(songs) - i) / len(songs)
                     collaborators[collaborator]['relevance'] = collaborators.get(collaborator, {}).get('relevance', 0) + score
                 else:
@@ -50,7 +50,7 @@ def rank_collaborators(songs, artist_name):
                     collaborators[collaborator]['hot_count'] += int(song['hot'])
                     collaborators[collaborator]['views'] += song['views']
                     collaborators[collaborator]['avg_views'] = collaborators[collaborator]['views'] /  collaborators[collaborator]['count']
-                    new_song = {'title': song['title'], 'id': song['id'], 'song_art': song['song_art']}
+                    new_song = {'title': song['title'], 'id': song['id'], 'song_art': song['song_art'], 'rank': song['rank']}
                     if new_song not in collaborators[collaborator]['song_list']:
                         collaborators[collaborator]['song_list'].append(new_song)
                 score = (len(songs) - i) / len(songs)
@@ -269,17 +269,17 @@ ids = [data[1]['id'] for data in x]
 names = [data[0] for data in x]
 
 for card in x:
-    doc_ref = db.collection('artists').document(artist_name).collection('collaborators').document(card)
+    doc_ref = db.collection('artists').document(artist_name).collection('collaborators').document(card[0])
     doc_ref.set({
             'name': names[y],
             'rank': y + 1,
-            'id': data[1]['id'],
-            'count': data[1]['count'],
-            'hot_count': data[1]['hot_count'],
-            'views': data[1]['views'],
-            'song_list': data[1]['song_list'],
-            'relevance': data[1]['relevance'],
-            'relevance_score': data[1]['relevance_score']
+            'id': card[1]['id'],
+            'count': card[1]['count'],
+            'hot_count': card[1]['hot_count'],
+            'views': card[1]['views'],
+            'song_list': card[1]['song_list'],
+            'relevance': card[1]['relevance'],
+            'relevance_score': card[1]['relevance_score']
         })
     #print(ids[y])
     songs = get_collaborator_songs(ids[y])
