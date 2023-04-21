@@ -31,6 +31,8 @@ def _get(path, params=None, headers=None):
         print('e')
         _get(path, params, headers)
 
+    return response.json()
+
 
 def run_scraper(artist):
     cmd = ['python3', 'GeniusMetaData.py', artist]
