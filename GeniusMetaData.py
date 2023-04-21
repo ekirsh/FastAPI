@@ -8,11 +8,18 @@ import sys
 import re
 import firebase_admin
 from firebase_admin import credentials, firestore
+from pymongo import MongoClient
 
-cred = credentials.Certificate('music-genius-383921-firebase-adminsdk-5pb85-70bdafbc7b.json')
-firebase_admin.initialize_app(cred)
+client = MongoClient('mongodb://mongo:99dOOEhHeU3cbLwHjYzQ@containers-us-west-79.railway.app:7240')
 
-db = firestore.client()
+
+
+#cred = credentials.Certificate('music-genius-383921-firebase-adminsdk-5pb85-70bdafbc7b.json')
+#firebase_admin.initialize_app(cred)
+
+#db = firestore.client()
+db = client['music-genius']
+artists_collection = db['artists']
 
 # constant values.
 BASE_URL = "https://api.genius.com"
@@ -110,11 +117,12 @@ def _get(path, params=None, headers=None):
         headers = {"Authorization": token}
     try:
         response = requests.get(url=requrl, params=params, headers=headers)
+        response.raise_for_status()
     except:
         sleep(2)
         print('e')
         _get(path, params, headers)
-    response.raise_for_status()
+
 
     return response.json()
 
@@ -240,6 +248,10 @@ for hit in find_id["response"]["hits"]:
 
 print("-> " + ARTIST_NAME + "'s id is " + str(artist_id) + "\n")
 
+artists_collection.insert_one({"_id": artist_id, "name": artist_name, "collaborators": []})
+current_artist = artists_collection.find_one({"_id": artist_id})
+
+
 print("getting song ids. \n")
 
 # get all song ids and make a list.
@@ -272,19 +284,21 @@ names = [data[0] for data in x]
 
 for card in x:
     info_a = get_artist_info(card[1]['id'])
-    doc_ref = db.collection('artists').document(artist_name).collection('collaborators').document(card[0])
-    doc_ref.set({
+    current_artist['collaborators'].append({
             'info': info_a,
             'name': names[y],
             'rank': y + 1,
-            'id': card[1]['id'],
+            '_id': card[1]['id'],
             'count': card[1]['count'],
             'hot_count': card[1]['hot_count'],
             'views': card[1]['views'],
             'song_list': card[1]['song_list'],
+            'songs': [],
+            'collaborators': [],
             'relevance': card[1]['relevance'],
             'relevance_score': card[1]['relevance_score']
         })
+    artists_collection.replace_one({"_id": artist_id}, current_artist)
     #print(ids[y])
     songs = get_collaborator_songs(ids[y])
     #print(songs)
@@ -292,15 +306,12 @@ for card in x:
     song_info = get_song_information(songs)
     #print(song_info)
     for song in song_info:
-        doc_ref = db.collection('artists').document(artist_name).collection('collaborators').document(names[y]).collection('songs')
-        doc_ref.add(song)
+        current_artist["collaborators"][-1]["songs"].append(song)
     z = rank_collaborators(song_info, names[y])
     for i, (collaborator, data) in enumerate(z):
-        print(f'{names[y]} {collaborator}')
-        doc_ref = db.collection('artists').document(artist_name).collection('collaborators').document(names[y]).collection('collaborators').document(collaborator)
-        doc_ref.set({
+        current_artist['collaborators'][-1]['collaborators'].append({
             'rank': i + 1,
-            'id': data['id'],
+            '_id': data['id'],
             'count': data['count'],
             'hot_count': data['hot_count'],
             'views': data['views'],
@@ -308,6 +319,8 @@ for card in x:
             'relevance': data['relevance'],
             'relevance_score': data['relevance_score']
         })
+        print(f'{names[y]} {collaborator}')
+    artists_collection.replace_one({"_id": artist_id}, current_artist)
     y += 1
 
 print("-> Mission complete! Check it out!")
