@@ -235,6 +235,7 @@ print("searching " + ARTIST_NAME + "'s artist id. \n")
 # find artist id from given data.
 find_id = _get("search", {'q': ARTIST_NAME})
 artist_name = ""
+artist_id = 0
 for hit in find_id["response"]["hits"]:
     original_name = hit["result"]["primary_artist"]["name"]
     formatted_name = format_string(original_name)
