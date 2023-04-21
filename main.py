@@ -105,7 +105,7 @@ async def demo_get_artist_data(artist_id: str):
     artist = artists_collection.find_one({"_id": artist_id})
     print(artist)
     if artist:
-        print('artist found'')
+        print('artist found')
         cc = artist["collaborators"]
         print(cc)
         if cc != []:
