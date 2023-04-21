@@ -121,8 +121,8 @@ def _get(path, params=None, headers=None):
         return response.json()
     except:
         sleep(2)
-        print('e')
-        _get(path, params, headers)
+        _get(path=path, params=params, headers=headers)
+
 
 def get_artist_songs(artist_id):
     # initialize variables & a list.
