@@ -11,6 +11,8 @@ client = MongoClient('mongodb://mongo:99dOOEhHeU3cbLwHjYzQ@containers-us-west-79
 db = client['music-genius']
 artists_collection = db['artists']
 app = FastAPI()
+BASE_URL = "https://api.genius.com"
+CLIENT_ACCESS_TOKEN = "uFcrDVB7L-4RswcUSzhO_yz6bldyQZ2dBbJQZCceXjrio6JJ4nBR5RVXuWA9G2c-"
 
 def _get(path, params=None, headers=None):
 
