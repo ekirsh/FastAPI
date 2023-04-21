@@ -36,15 +36,15 @@ def run_scraper(artist):
 
 
 def scrape_artist(artist_name):
-    find_id = _get("search", {'q': ARTIST_NAME})
+    find_id = _get("search", {'q': artist_name})
     artist_name = ""
     artist_id = ""
     for hit in find_id["response"]["hits"]:
         original_name = hit["result"]["primary_artist"]["name"]
         formatted_name = format_string(original_name)
         print(formatted_name)
-        print(format_string(ARTIST_NAME))
-        if formatted_name == format_string(ARTIST_NAME):
+        print(format_string(artist_name))
+        if formatted_name == format_string(artist_name):
             artist_id = hit["result"]["primary_artist"]["id"]
             artist_name = original_name
             print(artist_id)
