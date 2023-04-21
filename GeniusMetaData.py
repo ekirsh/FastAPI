@@ -118,13 +118,11 @@ def _get(path, params=None, headers=None):
     try:
         response = requests.get(url=requrl, params=params, headers=headers)
         response.raise_for_status()
+        return response.json()
     except:
         sleep(2)
         print('e')
         _get(path, params, headers)
-
-
-    return response.json()
 
 def get_artist_songs(artist_id):
     # initialize variables & a list.
