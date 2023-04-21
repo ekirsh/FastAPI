@@ -102,7 +102,7 @@ async def demo_get_path_id(artist_id: str):
 
 @app.get("/artist-data/{artist_id}")
 async def demo_get_artist_data(artist_id: str):
-    artist = artists_collection.find_one({"_id": artist_id})
+    artist = artists_collection.find_one({"id": artist_id})
     print(artist)
     if artist:
         cc = artist["collaborators"]
