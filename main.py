@@ -6,6 +6,8 @@ from lxml import etree
 from pymongo import MongoClient
 import subprocess
 import threading
+import sys
+import re
 
 client = MongoClient('mongodb://mongo:99dOOEhHeU3cbLwHjYzQ@containers-us-west-79.railway.app:7240')
 db = client['music-genius']
@@ -13,6 +15,19 @@ artists_collection = db['artists']
 app = FastAPI()
 BASE_URL = "https://api.genius.com"
 CLIENT_ACCESS_TOKEN = "uFcrDVB7L-4RswcUSzhO_yz6bldyQZ2dBbJQZCceXjrio6JJ4nBR5RVXuWA9G2c-"
+
+
+def format_string(string):
+    # convert string to lowercase
+    string = string.lower()
+
+    # remove special characters from string
+    string = string.replace(' ', '').replace('-', '')
+    string = string.lstrip()
+    string = string.replace('\u200b', '')
+    string = re.sub(r'^\s*', '', string)
+
+    return string
 
 def _get(path, params=None, headers=None):
 
