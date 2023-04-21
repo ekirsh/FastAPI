@@ -51,7 +51,7 @@ def _get(path, params=None, headers=None):
         response.raise_for_status()
     except:
         sleep(2)
-        print('e')
+        print('error with your request')
         _get(path, params, headers)
 
     return response.json()
@@ -102,9 +102,10 @@ async def demo_get_path_id(artist_id: str):
 
 @app.get("/artist-data/{artist_id}")
 async def demo_get_artist_data(artist_id: str):
-    artist = artists_collection.find_one({"id": artist_id})
+    artist = artists_collection.find_one({"_id": artist_id})
     print(artist)
     if artist:
+        print('artist found'')
         cc = artist["collaborators"]
         print(cc)
         if cc != []:
