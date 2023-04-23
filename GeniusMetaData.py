@@ -310,6 +310,8 @@ for card in x:
     z = rank_collaborators(song_info, names[y])
     for i, (collaborator, data) in enumerate(z):
         current_artist['collaborators'][-1]['collaborators'].append({
+            'info': get_artist_info(data['id']),
+            'name': collaborator,
             'rank': i + 1,
             '_id': data['id'],
             'count': data['count'],
