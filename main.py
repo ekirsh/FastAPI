@@ -5,12 +5,15 @@ import requests, json
 from bs4 import BeautifulSoup
 from lxml import etree
 from pymongo import MongoClient
+import os
 import subprocess
 import threading
 import sys
 import re
 
-client = MongoClient('mongodb://mongo:99dOOEhHeU3cbLwHjYzQ@containers-us-west-79.railway.app:7240')
+password = os.environ.get('MONGO_PASSWORD')
+uri = f'mongodb+srv://ezkirsh:{password}@genius.riaazno.mongodb.net/?retryWrites=true&w=majority'
+client = MongoClient(uri)
 db = client['music-genius']
 artists_collection = db['artists']
 app = FastAPI()
@@ -102,6 +105,7 @@ async def demo_get_path_id(artist_id: str):
 
 @app.get("/artist-data/{artist_id}")
 async def demo_get_artist_data(artist_id: str):
+    print(artist_id)
     artist = artists_collection.find_one({"_id": artist_id})
     print(artist)
     if artist:

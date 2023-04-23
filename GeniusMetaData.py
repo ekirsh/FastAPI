@@ -7,12 +7,13 @@ from typing import List, Dict
 import sys
 import re
 import firebase_admin
+import os
 from firebase_admin import credentials, firestore
 from pymongo import MongoClient
 
-client = MongoClient('mongodb://mongo:99dOOEhHeU3cbLwHjYzQ@containers-us-west-79.railway.app:7240')
-
-
+password = os.environ.get('MONGO_PASSWORD')
+uri = f'mongodb+srv://ezkirsh:{password}@genius.riaazno.mongodb.net/?retryWrites=true&w=majority'
+client = MongoClient(uri)
 
 #cred = credentials.Certificate('music-genius-383921-firebase-adminsdk-5pb85-70bdafbc7b.json')
 #firebase_admin.initialize_app(cred)
