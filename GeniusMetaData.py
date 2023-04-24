@@ -32,7 +32,8 @@ def get_artist_info(artist_id):
     headers = {'Authorization': 'Bearer uFcrDVB7L-4RswcUSzhO_yz6bldyQZ2dBbJQZCceXjrio6JJ4nBR5RVXuWA9G2c-'}
     url = base_url + str(artist_id) + "?text_format=plain"
     response = requests.get(url, headers=headers)
-    data = response.json()['response']['artist']
+    data = response.json()
+    data = data['response']['artist']
     artist_info = {'description': data['description']['plain'], 'instagram': data['instagram_name'],
                    'twitter': data['twitter_name'], 'image': data['image_url']}
     return artist_info
@@ -76,10 +77,10 @@ def rank_collaborators(songs, artist_name):
                         collaborators[collaborator]['relevance'] = collaborators.get(collaborator, {}).get('relevance', 0) + score
                         collaborators[collaborator]['relevance_score'] = collaborators[collaborator]['relevance'] / collaborators[collaborator]['count']
     sorted_collaborators = sorted(collaborators.items(),
-                                  key=lambda x: (-x[1]['relevance_score']*0.5 + -x[1]['count']*0.8 + -x[1]['views']*0.2,
-                                                 -x[1]['relevance'],
-                                                 -x[1]['hot_count']))
-
+    key=lambda x: (-x[1]['relevance_score']*0.3 if x[1]['count']==1 else -x[1]['relevance_score']*0.5
+    + -x[1]['count']*0.7 if x[1]['count']==1 else -x[1]['count']*0.7
+    + -x[1]['views']*0.2,
+    -x[1]['hot_count']))
     
     return sorted_collaborators
 
@@ -305,12 +306,13 @@ for card in x:
     sleep(2)
     song_info = get_song_information(songs)
     #print(song_info)
-    for song in song_info:
+    for song in song_info[:15]:
         current_artist["collaborators"][-1]["songs"].append(song)
     z = rank_collaborators(song_info, names[y])
     for i, (collaborator, data) in enumerate(z):
+        if i > 20:
+            break
         current_artist['collaborators'][-1]['collaborators'].append({
-            'info': get_artist_info(data['id']),
             'name': collaborator,
             'rank': i + 1,
             '_id': data['id'],
