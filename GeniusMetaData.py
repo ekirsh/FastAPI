@@ -194,13 +194,18 @@ def get_collaborator_songs(artist_id):
 def get_song_information(song_ids):
     # initialize a dictionary.
     song_list = []
-
+    i = 0
     # main loop
     for i, song_id in enumerate(song_ids):
+        if i > 80:
+            break
         print("id:" + str(song_id) + " start. ->")
 
         path = "songs/{}".format(song_id)
-        data = _get(path=path)["response"]["song"]
+        data1 = _get(path=path)
+        if data1 is None:
+            continue
+        data = data1['response']['song']
 
 
         song_list.append(
@@ -224,7 +229,8 @@ def get_song_information(song_ids):
                 "rank": i + 1
             }
         )
-        
+
+        i += 1
         print("-> id:" + str(song_id) + " is finished. \n")
     return song_list
 
