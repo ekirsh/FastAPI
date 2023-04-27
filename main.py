@@ -64,7 +64,7 @@ def _get(path, params=None, headers=None):
 def run_scraper(artist, artist_id):
     cmd = ['python3', 'GeniusMetaData.py', artist]
     try:
-        subprocess.run(cmd, check=True)
+        subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
         print('Scanning Complete')
         active_scraper = active_scrapers_collection.find_one({"_id": artist_id})
         active_scraper["status"] = "complete"
@@ -95,6 +95,8 @@ def scrape_artist(artist_name):
             nnm = original_name
             print(artist_id)
             break
+    if artist_id == "":
+        return {"message": "Artist not found"}
     filter_dict = {"_id": artist_id}
     count = active_scrapers_collection.count_documents(filter_dict)
     if count > 0:
