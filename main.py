@@ -79,6 +79,7 @@ def run_scraper(artist, artist_id):
 def scrape_artist(artist_name):
     find_id = _get("search", {'q': artist_name})
     artist_id = ""
+    nnm = ""
     for hit in find_id["response"]["hits"]:
         original_name = hit["result"]["primary_artist"]["name"]
         formatted_name = format_string(original_name)
@@ -86,6 +87,7 @@ def scrape_artist(artist_name):
         print(format_string(artist_name))
         if formatted_name == format_string(artist_name):
             artist_id = hit["result"]["primary_artist"]["id"]
+            nnm = original_name
             print(artist_id)
             break
     filter_dict = {"_id": artist_id}
@@ -93,7 +95,7 @@ def scrape_artist(artist_name):
     if count > 0:
         return artist_id
     else:
-        active_scrapers_collection.insert_one({"name": artist_name, "status": "active", "_id": artist_id})
+        active_scrapers_collection.insert_one({"name": nnm, "status": "active", "_id": artist_id})
         scraper_thread = threading.Thread(target=run_scraper, args=(artist_name, artist_id))
         scraper_thread.start()
         return artist_id
