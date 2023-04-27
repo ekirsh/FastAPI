@@ -66,13 +66,13 @@ def run_scraper(artist, artist_id):
     try:
         subprocess.run(cmd, check=True)
         print('Scanning Complete')
-        active_scraper = active_scrapers_collection.find_one({"artist_id": artist_id})
+        active_scraper = active_scrapers_collection.find_one({"_id": artist_id})
         active_scraper["status"] = "complete"
-        active_scrapers_collection.replace_one({"artist_id": artist_id}, active_scraper)
+        active_scrapers_collection.replace_one({"_id": artist_id}, active_scraper)
     except subprocess.CalledProcessError as e:
-        active_scraper = active_scrapers_collection.find_one({"artist_id": artist_id})
+        active_scraper = active_scrapers_collection.find_one({"_id": artist_id})
         active_scraper["status"] = "error"
-        active_scrapers_collection.replace_one({"artist_id": artist_id}, active_scraper)
+        active_scrapers_collection.replace_one({"_id": artist_id}, active_scraper)
         print('Scanning Error')
 
 
@@ -88,7 +88,7 @@ def scrape_artist(artist_name):
             artist_id = hit["result"]["primary_artist"]["id"]
             print(artist_id)
             break
-    active_scrapers_collection.insert_one({"name": artist_name, "status": "active", "artist_id": artist_id})
+    active_scrapers_collection.insert_one({"name": artist_name, "status": "active", "_id": artist_id})
     scraper_thread = threading.Thread(target=run_scraper, args=(artist_name, artist_id))
     scraper_thread.start()
     return artist_id
