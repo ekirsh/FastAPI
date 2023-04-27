@@ -74,6 +74,11 @@ def run_scraper(artist, artist_id):
         active_scraper["status"] = "error"
         active_scrapers_collection.replace_one({"_id": artist_id}, active_scraper)
         print('Scanning Error')
+    except Exception as e:
+        active_scraper = active_scrapers_collection.find_one({"_id": artist_id})
+        active_scraper["status"] = "error"
+        active_scrapers_collection.replace_one({"_id": artist_id}, active_scraper)
+        print('Scanning Error')
 
 
 def scrape_artist(artist_name):
