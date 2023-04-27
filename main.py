@@ -16,6 +16,7 @@ uri = f'mongodb+srv://ezkirsh:{password}@genius.riaazno.mongodb.net/?retryWrites
 client = MongoClient(uri)
 db = client['music-genius']
 artists_collection = db['artists']
+active_scrapers_collection = db['active-scrapers']
 app = FastAPI()
 BASE_URL = "https://api.genius.com"
 CLIENT_ACCESS_TOKEN = "uFcrDVB7L-4RswcUSzhO_yz6bldyQZ2dBbJQZCceXjrio6JJ4nBR5RVXuWA9G2c-"
@@ -60,9 +61,19 @@ def _get(path, params=None, headers=None):
     return response.json()
 
 
-def run_scraper(artist):
+def run_scraper(artist, artist_id):
     cmd = ['python3', 'GeniusMetaData.py', artist]
-    subprocess.run(cmd)
+    try:
+        subprocess.run(cmd, check=True)
+        print('Scanning Complete')
+        active_scraper = active_scrapers_collection.find_one({"artist_id": artist_id})
+        active_scraper["status"] = "complete"
+        active_scrapers_collection.replace_one({"artist_id": artist_id}, active_scraper)
+    except subprocess.CalledProcessError as e:
+        active_scraper = active_scrapers_collection.find_one({"artist_id": artist_id})
+        active_scraper["status"] = "error"
+        active_scrapers_collection.replace_one({"artist_id": artist_id}, active_scraper)
+        print('Scanning Error')
 
 
 def scrape_artist(artist_name):
@@ -77,7 +88,8 @@ def scrape_artist(artist_name):
             artist_id = hit["result"]["primary_artist"]["id"]
             print(artist_id)
             break
-    scraper_thread = threading.Thread(target=run_scraper, args=(artist_name,))
+    active_scrapers_collection.insert_one({"name": artist_name, "status": "active", "artist_id": artist_id})
+    scraper_thread = threading.Thread(target=run_scraper, args=(artist_name, artist_id))
     scraper_thread.start()
     return artist_id
 
@@ -103,18 +115,32 @@ async def demo_post(inp: Msg):
 async def demo_get_path_id(artist_id: str):
     return scrape_artist(artist_id)
 
+@app.get("/get_active_scrapers")
+async def demo_get_artist_data():
+    cursor = active_scrapers_collection.find({})
+    print(cursor)
+    data = []
+    for document in cursor:
+        data.append(document)
+    return data
+
+
 @app.get("/artist-data/{artist_id}")
 async def demo_get_artist_data(artist_id: str):
-    print(artist_id)
-    artist = artists_collection.find_one({"_id": int(artist_id)})
-    print(artist)
-    if artist:
-        print('artist found')
-        cc = artist["collaborators"]
-        print(cc)
-        if cc != []:
-            return cc
+    active_scraper = active_scrapers_collection.find_one({"artist_id": artist_id})
+    if active_scraper["status"] != "error":
+        print(artist_id)
+        artist = artists_collection.find_one({"_id": int(artist_id)})
+        print(artist)
+        if artist:
+            print('artist found')
+            cc = artist["collaborators"]
+            print(cc)
+            if cc != []:
+                return cc
+            else:
+                return {"message": "Artist still loading..."}
         else:
             return {"message": "Artist still loading..."}
     else:
-        return {"message": "Artist still loading..."}
+        return {"message": "Scraper had an error"}
