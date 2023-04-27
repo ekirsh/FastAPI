@@ -290,6 +290,8 @@ ids = [data[1]['id'] for data in x]
 names = [data[0] for data in x]
 
 for card in x:
+    if y > 30:
+        break
     info_a = get_artist_info(card[1]['id'])
     current_artist['collaborators'].append({
             'info': info_a,
