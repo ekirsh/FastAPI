@@ -127,7 +127,7 @@ async def demo_get_artist_data():
 
 @app.get("/artist-data/{artist_id}")
 async def demo_get_artist_data(artist_id: str):
-    active_scraper = active_scrapers_collection.find_one({"_id": artist_id})
+    active_scraper = active_scrapers_collection.find_one({"_id": int(artist_id)})
     if active_scraper["status"] != "error":
         print(artist_id)
         artist = artists_collection.find_one({"_id": int(artist_id)})
