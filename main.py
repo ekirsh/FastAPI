@@ -88,10 +88,15 @@ def scrape_artist(artist_name):
             artist_id = hit["result"]["primary_artist"]["id"]
             print(artist_id)
             break
-    active_scrapers_collection.insert_one({"name": artist_name, "status": "active", "_id": artist_id})
-    scraper_thread = threading.Thread(target=run_scraper, args=(artist_name, artist_id))
-    scraper_thread.start()
-    return artist_id
+    filter_dict = {"_id": artist_id}
+    count = active_scrapers_collection.count_documents(filter_dict)
+    if count > 0:
+        return artist_id
+    else:
+        active_scrapers_collection.insert_one({"name": artist_name, "status": "active", "_id": artist_id})
+        scraper_thread = threading.Thread(target=run_scraper, args=(artist_name, artist_id))
+        scraper_thread.start()
+        return artist_id
 
 class Msg(BaseModel):
     msg: str
