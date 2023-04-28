@@ -34,7 +34,6 @@ app.add_middleware(
 class Artist(BaseModel):
     name: str
     status: str
-    id: Optional[str] = None
     _id: int
     date: Optional[str] = None
 
@@ -153,6 +152,8 @@ async def demo_get_artist_data():
 def search_artists(search_term: str):
     print(search_term)
     cursor = active_scrapers_collection.find({"name": {"$regex": search_term, "$options": "i"}})
+    for artist in cursor:
+        print(artist)
     return [Artist(**artist) for artist in cursor]
 
 
