@@ -170,7 +170,7 @@ async def demo_get_artist_data(artist_id: str):
         cc = artist["collaborators"]
         print(cc)
         if cc != []:
-            return cc
+            return artist
         else:
             return {"message": "Artist still loading..."}
     else:
