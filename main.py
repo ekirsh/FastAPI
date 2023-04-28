@@ -150,11 +150,13 @@ async def demo_get_artist_data():
 
 @app.get("/search/{search_term}")
 def search_artists(search_term: str):
+    results = []
     print(search_term)
     cursor = active_scrapers_collection.find({"name": {"$regex": search_term, "$options": "i"}})
     for artist in cursor:
+        results.append(artist)
         print(artist)
-    return [Artist(**artist) for artist in cursor]
+    return results
 
 
 @app.get("/artist-data/{artist_id}")
