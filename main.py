@@ -25,6 +25,7 @@ CLIENT_ACCESS_TOKEN = "uFcrDVB7L-4RswcUSzhO_yz6bldyQZ2dBbJQZCceXjrio6JJ4nBR5RVXu
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -148,6 +149,7 @@ async def demo_get_artist_data():
 
 @app.get("/search/{search_term}")
 def search_artists(search_term: str):
+    print(search_term)
     cursor = active_scrapers_collection.find({"name": {"$regex": search_term, "$options": "i"}})
     return [Artist(**artist) for artist in cursor]
 
