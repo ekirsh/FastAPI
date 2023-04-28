@@ -7,9 +7,11 @@ from lxml import etree
 from pymongo import MongoClient
 import os
 import subprocess
+from motor.motor_asyncio import AsyncIOMotorClient
 import threading
 import sys
 import re
+from datetime import datetime
 
 password = os.environ.get('MONGO_PASSWORD')
 uri = f'mongodb+srv://ezkirsh:{password}@genius.riaazno.mongodb.net/?retryWrites=true&w=majority'
@@ -27,6 +29,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+class Artist(BaseModel):
+    name: str
+    status: str
+    _id: int
+    date: datetime
 
 
 def format_string(string):
@@ -102,13 +110,14 @@ def scrape_artist(artist_name):
     if count > 0:
         return artist_id
     else:
-        active_scrapers_collection.insert_one({"name": nnm, "status": "active", "_id": artist_id})
+        active_scrapers_collection.insert_one({"name": nnm, "status": "active", "_id": artist_id, "date": datetime.now()})
         scraper_thread = threading.Thread(target=run_scraper, args=(artist_name, artist_id))
         scraper_thread.start()
         return artist_id
 
 class Msg(BaseModel):
     msg: str
+
 
 @app.get("/")
 async def root():
@@ -137,6 +146,11 @@ async def demo_get_artist_data():
     for document in cursor:
         data.append(document)
     return data
+
+@app.get("/search/{search_term}")
+def search_artists(search_term: str):
+    cursor = active_scrapers_collection.find({"name": {"$regex": search_term, "$options": "i"}})
+    return [Artist(**artist) for artist in cursor]
 
 
 @app.get("/artist-data/{artist_id}")
