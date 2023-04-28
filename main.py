@@ -34,6 +34,7 @@ app.add_middleware(
 class Artist(BaseModel):
     name: str
     status: str
+    id: Optional[str] = None
     _id: int
     date: Optional[str] = None
 
