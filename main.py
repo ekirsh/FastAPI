@@ -141,7 +141,7 @@ async def demo_get_path_id(artist_id: str):
 
 @app.get("/get_active_scrapers")
 async def demo_get_artist_data():
-    cursor = active_scrapers_collection.find({})
+    cursor = active_scrapers_collection.find().sort("date", -1)
     print(cursor)
     data = []
     for document in cursor:
