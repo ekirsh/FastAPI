@@ -7,7 +7,6 @@ from lxml import etree
 from pymongo import MongoClient
 import os
 import subprocess
-from motor.motor_asyncio import AsyncIOMotorClient
 import threading
 import sys
 import re
