@@ -7,6 +7,7 @@ from lxml import etree
 from pymongo import MongoClient
 import os
 import subprocess
+from typing import Optional
 import threading
 import sys
 import re
@@ -34,7 +35,7 @@ class Artist(BaseModel):
     name: str
     status: str
     _id: int
-    date: datetime
+    date: Optional[str] = None
 
 
 def format_string(string):
