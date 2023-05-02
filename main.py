@@ -38,6 +38,7 @@ class Artist(BaseModel):
     date: Optional[str] = None
 
 
+
 def format_string(string):
     # convert string to lowercase
     string = string.lower()
