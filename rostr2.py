@@ -48,7 +48,9 @@ def format_data_pub(data, name):
 
 
 def find_info(cc):
+    print('FIND INFO')
     managment_company = cc
+    print(managment_company)
     managment_path = convert_string(managment_company)
     managment_path = ''.join(e for e in managment_path if e.isalnum())
 

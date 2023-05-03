@@ -328,6 +328,7 @@ for card in x:
         break
     info_a = get_artist_info(card[1]['id'])
     mgmt_pub = find_info(names[y])
+    print('MGMT PUB: ' + mgmt_pub)
     if mgmt_pub is not "NA":
         info_a['management'] = mgmt_pub['mgmt']
         info_a['publisher'] = mgmt_pub['pub']
