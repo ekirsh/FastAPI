@@ -82,11 +82,12 @@ def rank_collaborators(songs, artist_name):
 
                         score = (len(songs) - i) / len(songs)
                         collaborators[collaborator]['relevance'] = collaborators.get(collaborator, {}).get('relevance', 0) + score
-
+                        print("JDJDJDJD")
                         # calculate relevance score based on release date
                         days_since_release = (datetime.datetime.now() - datetime.datetime.strptime(song['release_date'], '%Y-%m-%d')).days
                         relevance_score = score / (1 + days_since_release / 30)
                         collaborators[collaborator]['relevance_score'] = relevance_score
+                        print("JDJDJDJD")
 
     sorted_collaborators = sorted(collaborators.items(),
                                    key=lambda x: (-x[1]['relevance_score']*0.2 if x[1]['count']==1 else -x[1]['relevance_score']*0.3
