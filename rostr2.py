@@ -68,7 +68,7 @@ def find_info(cc):
     print(json_response)
 
     try:
-        if json_response['entities'][0]['role'] == "MANAGER":
+        if 'role' in json_response['entities'][0]:
             managment_path = managment_path + "0"
             url2 = f'https://www.rostr.cc/api/v1/artist/{managment_path}/team/publisher'
             url3 = f'https://www.rostr.cc/api/v1/artist/{managment_path}/team/management'
@@ -83,6 +83,7 @@ def find_info(cc):
         print("NOT FOUND")
         return "NA"
     else:
+        print("FENI")
         team = extract_team_members(json_response)
         yut = format_data_pub(team, managment_company)
 
