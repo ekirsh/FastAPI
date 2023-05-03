@@ -53,48 +53,66 @@ def format_string(string):
     
 
 def rank_collaborators(songs, artist_name):
+
     collaborators = {}
 
     for i, song in enumerate(songs):
+
         for collaborator in song['writer_artists'] + song['producer_artists']:
+
             id_num = collaborator['id']
+
             collaborator = collaborator['name']
+
+            print(collaborator)
+
+            print(artist_name)
+
             if collaborator != artist_name:
+
                 if collaborator not in collaborators:
-                    collaborators[collaborator] = {'count': 1, 'hot_count': int(song['hot']), 'id': str(id_num), 'views': song['views'], 'song_list': [{'title': song['title'], 'id': song['id'], 'song_art': song['song_art'], 'release_date': song['release_date'], 'rank': song['rank']}]}
+
+                    collaborators[collaborator] = {'count': 1, 'hot_count': int(song['hot']), 'id': str(id_num), 'views': song['views'], 'song_list': [{'title': song['title'], 'id': song['id'], 'song_art': song['song_art'], 'rank': song['rank']}]}
 
                     score = (len(songs) - i) / len(songs)
+
                     collaborators[collaborator]['relevance'] = collaborators.get(collaborator, {}).get('relevance', 0) + score
 
-                    # calculate relevance score based on release date
-                    days_since_release = (datetime.datetime.now() - datetime.datetime.strptime(song['release_date'], '%Y-%m-%d')).days
-                    relevance_score = score / (1 + days_since_release / 30)
-                    collaborators[collaborator]['relevance_score'] = relevance_score
+                    collaborators[collaborator]['relevance_score'] = collaborators[collaborator]['relevance'] / collaborators[collaborator]['count']
 
                 else:
-                    new_song = {'title': song['title'], 'id': song['id'], 'song_art': song['song_art'], 'release_date': song['release_date'], 'rank': song['rank']}
+
+                    new_song = {'title': song['title'], 'id': song['id'], 'song_art': song['song_art'], 'rank': song['rank']}
 
                     if new_song not in collaborators[collaborator]['song_list']:
+
                         collaborators[collaborator]['hot_count'] += int(song['hot'])
+
                         collaborators[collaborator]['views'] += song['views']
+
                         collaborators[collaborator]['song_list'].append(new_song)
+
                         collaborators[collaborator]['count'] += 1
+
                         collaborators[collaborator]['avg_views'] = collaborators[collaborator]['views'] /  collaborators[collaborator]['count']
 
                         score = (len(songs) - i) / len(songs)
+
                         collaborators[collaborator]['relevance'] = collaborators.get(collaborator, {}).get('relevance', 0) + score
-                        print("JDJDJDJD")
-                        # calculate relevance score based on release date
-                        days_since_release = (datetime.datetime.now() - datetime.datetime.strptime(song['release_date'], '%Y-%m-%d')).days
-                        relevance_score = score / (1 + days_since_release / 30)
-                        collaborators[collaborator]['relevance_score'] = relevance_score
-                        print("JDJDJDJD")
+
+                        collaborators[collaborator]['relevance_score'] = collaborators[collaborator]['relevance'] / collaborators[collaborator]['count']
 
     sorted_collaborators = sorted(collaborators.items(),
-                                   key=lambda x: (-x[1]['relevance_score']*0.2 if x[1]['count']==1 else -x[1]['relevance_score']*0.3
-                                                 + -x[1]['count']*0.9 if x[1]['count']==1 else -x[1]['count']*0.7
-                                                 + -x[1]['views']*0.2,
-                                                 -x[1]['hot_count']))
+
+    key=lambda x: (-x[1]['relevance_score']*0.2 if x[1]['count']==1 else -x[1]['relevance_score']*0.3
+
+    + -x[1]['count']*0.9 if x[1]['count']==1 else -x[1]['count']*0.7
+
+    + -x[1]['views']*0.2,
+
+    -x[1]['hot_count']))
+
+
 
     return sorted_collaborators
 
