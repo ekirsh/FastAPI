@@ -147,7 +147,7 @@ async def demo_get_artist_data():
     data = []
     for document in cursor:
         data.append(document)
-    print(f'active scrapers: {data}')
+    #print(f'active scrapers: {data}')
     return data
 
 @app.get("/search/{search_term}")

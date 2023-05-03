@@ -8,10 +8,12 @@ import sys
 import re
 import firebase_admin
 import os
+import datetime
 from firebase_admin import credentials, firestore
 from pymongo import MongoClient
 
 password = os.environ.get('MONGO_PASSWORD')
+password = 'ObI8IxW3HZ0OaSok'
 uri = f'mongodb+srv://ezkirsh:{password}@genius.riaazno.mongodb.net/?retryWrites=true&w=majority'
 client = MongoClient(uri)
 
