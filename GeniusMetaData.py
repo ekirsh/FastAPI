@@ -11,6 +11,7 @@ import os
 import datetime
 from firebase_admin import credentials, firestore
 from pymongo import MongoClient
+from rostr2 import find_info
 
 password = os.environ.get('MONGO_PASSWORD')
 uri = f'mongodb+srv://ezkirsh:{password}@genius.riaazno.mongodb.net/?retryWrites=true&w=majority'
@@ -326,6 +327,10 @@ for card in x:
     if y > 30:
         break
     info_a = get_artist_info(card[1]['id'])
+    mgmt_pub = find_info(names[y])
+    if mgmt_pub is not "NA":
+        info_a['management'] = mgmt_pub['mgmt']
+        info_a['publisher'] = mgmt_pub['pub']
     current_artist['collaborators'].append({
             'info': info_a,
             'name': names[y],
