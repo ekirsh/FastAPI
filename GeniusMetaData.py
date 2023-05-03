@@ -331,6 +331,9 @@ for card in x:
     if mgmt_pub is not "NA":
         info_a['management'] = mgmt_pub['mgmt']
         info_a['publisher'] = mgmt_pub['pub']
+    else:
+        info_a['management'] = ["NA"]
+        info_a['publisher'] = ["NA"]
     current_artist['collaborators'].append({
             'info': info_a,
             'name': names[y],
