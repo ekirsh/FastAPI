@@ -26,8 +26,9 @@ def match_names_emails(names, emails, threshold=70):
         for email in emails:
             preprocessed_email = preprocess(email)
             print("NAME NAME: " + preprocessed_name)
-            print("EMAIL EMAIL: " + preprocessed_email)
-            score = fuzz.partial_ratio(preprocessed_name, preprocessed_email)
+            print("EMAIL EMAIL: " + preprocessed_email.split(' ')[0])
+            score = fuzz.partial_ratio(preprocessed_name, preprocessed_email.split(' ')[0])
+            print("SCORE: " + str(score))
             if score > best_score and score >= threshold:
                 best_score = score
                 best_match = email
@@ -153,6 +154,7 @@ def find_info(cc):
             email_list = get_emails(cur_url)
             print(team1)
             name_list = []
+            test_num = 0
             for person in team2[0]['people']:
                 if test_num > 0:
                     break

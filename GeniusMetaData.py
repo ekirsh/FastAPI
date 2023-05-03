@@ -106,13 +106,12 @@ def rank_collaborators(songs, artist_name):
 
     sorted_collaborators = sorted(collaborators.items(),
 
-    key=lambda x: (-x[1]['relevance_score']*0.2 if x[1]['count']==1 else -x[1]['relevance_score']*0.3
+    sorted_collaborators = sorted(collaborators.items(),
+                                  key=lambda x: (-x[1]['count']*0.5
+                                                 -x[1]['relevance_score']*0.1 if x[1]['count']==1 else -x[1]['relevance_score']*0.2
+                                                 -x[1]['views']*0.1
+                                                 -x[1]['hot_count']*0.2))
 
-    + -x[1]['count']*0.9 if x[1]['count']==1 else -x[1]['count']*0.7
-
-    + -x[1]['views']*0.2,
-
-    -x[1]['hot_count']))
 
 
 
