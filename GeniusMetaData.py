@@ -333,9 +333,13 @@ for card in x:
     if mgmt_pub != "NA":
         info_a['management'] = mgmt_pub['mgmt']
         info_a['publisher'] = mgmt_pub['pub']
+        info_a['mgmt_email_list'] = mgmt_pub['mgmt_email_list']
+        info_a['pub_email_list'] = mgmt_pub['pub_email_list']
     else:
-        info_a['management'] = ["NA"]
-        info_a['publisher'] = ["NA"]
+        info_a['management'] = ["N/A"]
+        info_a['publisher'] = ["N/A"]
+        info_a['mgmt_email_list'] = []
+        info_a['pub_email_list'] = []
     current_artist['collaborators'].append({
             'info': info_a,
             'name': names[y],

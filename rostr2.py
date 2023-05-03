@@ -1,6 +1,10 @@
 import requests
 import json
 import sys
+from emailfinder.extractor import *
+from fuzzywuzzy import fuzz
+import Levenshtein
+import re
 
 
 def convert_string(string):
@@ -9,6 +13,34 @@ def convert_string(string):
     # Convert the string to lowercase
     string = string.lower()
     return string
+
+def preprocess(text):
+    return re.sub(r'\W+', ' ', text).strip().lower()
+
+def match_names_emails(names, emails, threshold=70):
+    matches = []
+    for name in names:
+        preprocessed_name = preprocess(name)
+        best_match = None
+        best_score = 0
+        for email in emails:
+            preprocessed_email = preprocess(email)
+            print("NAME NAME: " + preprocessed_name)
+            print("EMAIL EMAIL: " + preprocessed_email)
+            score = fuzz.partial_ratio(preprocessed_name, preprocessed_email)
+            if score > best_score and score >= threshold:
+                best_score = score
+                best_match = email
+        if best_match:
+            matches.append(best_match)
+            emails.remove(best_match)
+    return matches
+
+def get_emails(domain):
+    emails1 = get_emails_from_google(domain)
+    emails2 = get_emails_from_bing(domain)
+    emails3 = get_emails_from_baidu(domain)
+    return list(set(emails1).union(set(emails2)).union(set(emails3)))
 
 def extract_team_members(data):
     companies = []
@@ -78,21 +110,57 @@ def find_info(cc):
     response = requests.get(url2, headers=headers)
     response_content = response.content
 
-    json_response = json.loads(response_content.decode('utf-8'))
-    if json_response == {'msg': 'No objects were returned for this request.'}:
+    json_response1 = json.loads(response_content.decode('utf-8'))
+    print(json_response1)
+    if json_response1 == {'msg': 'No objects were returned for this request.'}:
         print("NOT FOUND")
         return "NA"
     else:
         print("FENI")
-        team = extract_team_members(json_response)
-        yut = format_data_pub(team, managment_company)
+        team1 = extract_team_members(json_response1)
+        yut = format_data_pub(team1, managment_company)
 
         response = requests.get(url3, headers=headers)
         response_content = response.content
 
         json_response = json.loads(response_content.decode('utf-8'))
         #print(json_response)
-        team = extract_team_members(json_response)
-        yup = format_data(team, managment_company)
-        return {'pub': yut, 'mgmt': yup}
+        team2 = extract_team_members(json_response)
+        yup = format_data(team2, managment_company)
+        matched_mails1 = []
+        matched_mails2 = []
+        for company in json_response1:
+                    cur_url = company['company']['websiteUrl']
+                    cur_url = cur_url.replace("https://", "").replace("http://", "").replace("www.", "").replace("/", "")
+                    print(cur_url)
+                    email_list = get_emails(cur_url)
+                    print(team1)
+                    name_list = []
+                    test_num = 0
+                    for person in team1[0]['people']:
+                        if test_num > 0:
+                            break
+                        name_list.append(person['name'])
+                        test_num += 1
+                    matched_mails1 = match_names_emails(name_list, email_list)
+                    print(matched_mails1)
+                    print(team2)
+                    print(email_list)
+        for company in json_response:
+            cur_url = company['company']['websiteUrl']
+            cur_url = cur_url.replace("https://", "").replace("http://", "").replace("www.", "").replace("/", "")
+            print(cur_url)
+            email_list = get_emails(cur_url)
+            print(team1)
+            name_list = []
+            for person in team2[0]['people']:
+                if test_num > 0:
+                    break
+                name_list.append(person['name'])
+                test_num += 1
+            matched_mails2 = match_names_emails(name_list, email_list)
+            print(matched_mails2)
+            print(team2)
+            print(email_list)
+        return {'pub': yut, 'mgmt': yup, 'mgmt_email_list': matched_mails2, 'pub_email_list': matched_mails1}
 
