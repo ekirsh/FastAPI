@@ -205,7 +205,12 @@ def get_collaborator_songs(artist_id):
         params = {'page': current_page}
         data = _get(path=path, params=params)
         #print(data)
-        page_songs = data['response']['songs']
+        page_songs = []
+        try:
+            page_songs = data['response']['songs']
+        except:
+            print(data)
+            return []
 
         if page_songs:
             # add all the songs of current page,

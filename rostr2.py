@@ -5,7 +5,7 @@ from emailfinder.extractor import *
 from fuzzywuzzy import fuzz
 import Levenshtein
 import re
-
+from urllib.parse import urlparse
 
 def convert_string(string):
     # Remove spaces from the string
@@ -132,7 +132,8 @@ def find_info(cc):
         matched_mails2 = []
         for company in json_response1:
                     cur_url = company['company']['websiteUrl']
-                    cur_url = cur_url.replace("https://", "").replace("http://", "").replace("www.", "").replace("/", "")
+                    cur_url = urlparse(cur_url).netloc.replace("www.", "")
+                    #cur_url = cur_url.replace("https://", "").replace("http://", "").replace("www.", "").replace("/", "")
                     print(cur_url)
                     email_list = get_emails(cur_url)
                     print(team1)
@@ -149,7 +150,8 @@ def find_info(cc):
                     print(email_list)
         for company in json_response:
             cur_url = company['company']['websiteUrl']
-            cur_url = cur_url.replace("https://", "").replace("http://", "").replace("www.", "").replace("/", "")
+            cur_url = urlparse(cur_url).netloc.replace("www.", "")
+            #cur_url = cur_url.replace("https://", "").replace("http://", "").replace("www.", "").replace("/", "")
             print(cur_url)
             email_list = get_emails(cur_url)
             print(team1)
